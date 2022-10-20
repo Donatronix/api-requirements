@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Domain\Api\Services;
 
 
+use App\Domain\Api\Repositories\Contracts\PriceRepository;
 use App\Domain\Api\Repositories\Contracts\ProductRepository;
 use App\Domain\Api\Services\Interfaces\ProductServiceInterface;
 use App\Domain\Api\Validators\ProductValidator;
 use App\Domain\Shared\Services\BaseService;
-use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -27,10 +27,12 @@ class ProductService extends BaseService implements ProductServiceInterface
 
     /**
      * @param ProductRepository $repository
+     * @param PriceRepository   $prices
      * @param ProductValidator  $validator
      */
     public function __construct(
         protected ProductRepository $repository,
+        protected PriceRepository   $prices,
         protected ProductValidator  $validator
     )
     {
@@ -86,14 +88,13 @@ class ProductService extends BaseService implements ProductServiceInterface
         try {
             DB::beginTransaction();
             $product = parent::store($request);
-            DB::table('prices')->insert([
+
+            $this->prices->create([
                 'id' => (string)Str::orderedUuid(),
                 'product_id' => $product->id,
                 'original' => $request['original'],
                 'final' => $request['final'],
-                'discount_percentage' => ($request['original'] - $request['final']) * 100 / $request['original'],
-                "created_at" => Carbon::now(),
-                "updated_at" => Carbon::now(),
+                'discount_percentage' => $request['discount_percentage'],
             ]);
 
             DB::commit();
@@ -124,12 +125,12 @@ class ProductService extends BaseService implements ProductServiceInterface
             }
 
             $product = parent::update($request, $id);
-            DB::table('prices')
-                ->where('product_id', $product->id)
-                ->update(array_merge($request, [
-                    'discount_percentage' => ($request['original'] - $request['final']) * 100 / $request['original'],
-                    "updated_at" => Carbon::now(),
-                ]));
+
+            $this->prices->update([
+                'original' => $request['original'],
+                'final' => $request['final'],
+                'discount_percentage' => ($request['original'] - $request['final']) * 100 / $request['original'],
+            ], $product->prices->first()->id);
 
             DB::commit();
 

@@ -5,6 +5,7 @@ namespace App\Domain\Api\Models;
 use App\Domain\Shared\Traits\UuidTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Class Product.
@@ -26,5 +27,13 @@ class Product extends Model
         'name',
         'category',
     ];
+
+    /**
+     * @return HasOne
+     */
+    public function price(): HasOne
+    {
+        return $this->hasOne(Price::class);
+    }
 
 }

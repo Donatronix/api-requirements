@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Domain\Api\Models\Price;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Price>
+ * @extends Factory<Price>
  */
 class PriceFactory extends Factory
 {
