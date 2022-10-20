@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace App\Domain\Api\Services;
 
 
-use App\Domain\Api\Repositories\Contracts\PriceRepository;
 use App\Domain\Api\Repositories\Contracts\ProductRepository;
 use App\Domain\Api\Services\Interfaces\ProductServiceInterface;
 use App\Domain\Api\Validators\ProductValidator;
 use App\Domain\Shared\Services\BaseService;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
 
@@ -27,12 +28,10 @@ class ProductService extends BaseService implements ProductServiceInterface
     /**
      * @param ProductRepository $repository
      * @param ProductValidator  $validator
-     * @param PriceRepository   $priceRepository
      */
     public function __construct(
         protected ProductRepository $repository,
-        protected ProductValidator  $validator,
-        protected PriceRepository   $priceRepository
+        protected ProductValidator  $validator
     )
     {
         //
@@ -55,19 +54,22 @@ class ProductService extends BaseService implements ProductServiceInterface
     }
 
     /**
+     * Get products by category
+     *
      * @param string $category
      *
      * @return mixed
      */
     public function getProductsByCategory(string $category): mixed
     {
-        return $this->repository
-            ->findWhere(['category', 'like', '%' . $category . '%'])
-            ->get();
+        return $this->repository->findWhere([
+            ['category', 'like', '%' . $category . '%'],
+        ])->get();
     }
 
-
     /**
+     * Get products with discount
+     *
      * @return LengthAwarePaginator|Collection|mixed
      */
     public function getProductsWithDiscount(): mixed
@@ -76,7 +78,7 @@ class ProductService extends BaseService implements ProductServiceInterface
             return $query->whereHas('prices', function ($q) {
                 return $q->whereNull('discount_percentage');
             });
-        })->get();
+        })->all();
     }
 
     public function store(array $request): mixed
@@ -84,7 +86,15 @@ class ProductService extends BaseService implements ProductServiceInterface
         try {
             DB::beginTransaction();
             $product = parent::store($request);
-            $this->priceRepository->create(array_merge($request, ['product_id' => $product->id]));
+            DB::table('prices')->insert([
+                'id' => (string)Str::orderedUuid(),
+                'product_id' => $product->id,
+                'original' => $request['original'],
+                'final' => $request['final'],
+                'discount_percentage' => ($request['original'] - $request['final']) * 100 / $request['original'],
+                "created_at" => Carbon::now(),
+                "updated_at" => Carbon::now(),
+            ]);
 
             DB::commit();
 
@@ -101,8 +111,25 @@ class ProductService extends BaseService implements ProductServiceInterface
         try {
             DB::beginTransaction();
 
-            $product = parent::update($request,$id);
-            $this->priceRepository->update($request, $product->price->id);
+            $product = $this->repository->find($id);
+            $sku = $request['sku'];
+            $name = $request['name'];
+
+            if ($sku !== $product->sku && $this->repository->findWhere([['sku', 'like', "%$sku%"],])->first() !== null) {
+                throw new RuntimeException('SKU already exists for another product');
+            }
+
+            if ($name !== $product->name && $this->repository->findWhere([['name', 'like', "%$name%"],])->first() !== null) {
+                throw new RuntimeException('Name already exists for another product');
+            }
+
+            $product = parent::update($request, $id);
+            DB::table('prices')
+                ->where('product_id', $product->id)
+                ->update(array_merge($request, [
+                    'discount_percentage' => ($request['original'] - $request['final']) * 100 / $request['original'],
+                    "updated_at" => Carbon::now(),
+                ]));
 
             DB::commit();
 
@@ -126,8 +153,10 @@ class ProductService extends BaseService implements ProductServiceInterface
         try {
             DB::beginTransaction();
 
-            $priceId=$this->repository->find($id)->price->id;
-            $this->priceRepository->delete($priceId);
+            DB::table('prices')
+                ->where('product_id', $id)
+                ->delete();
+
             $product = parent::delete($id);
 
             DB::commit();

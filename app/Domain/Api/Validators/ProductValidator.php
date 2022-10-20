@@ -2,8 +2,8 @@
 
 namespace App\Domain\Api\Validators;
 
-use \Prettus\Validator\Contracts\ValidatorInterface;
-use \Prettus\Validator\LaravelValidator;
+use Prettus\Validator\Contracts\ValidatorInterface;
+use Prettus\Validator\LaravelValidator;
 
 /**
  * Class ProductValidator.
@@ -22,17 +22,15 @@ class ProductValidator extends LaravelValidator
             'sku' => 'required|string|unique:products',
             'name' => 'required|string|unique:products',
             'category' => 'required|string',
-            'original'=> 'required|numeric',
-            'final'=> 'required|numeric',
-            'currency'=> 'required|string'
+            'original' => 'required|numeric',
+            'final' => 'required|numeric',
         ],
         ValidatorInterface::RULE_UPDATE => [
             'sku' => 'required|string',
             'name' => 'required|string',
             'category' => 'required|string',
-            'original'=> 'required|numeric',
-            'final'=> 'required|numeric',
-            'currency'=> 'required|string'
+            'original' => 'required|numeric',
+            'final' => 'required|numeric',
         ],
     ];
 }

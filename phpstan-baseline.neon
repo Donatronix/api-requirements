@@ -1,0 +1,56 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^PHPDoc type array of property App\\\\Domain\\\\Api\\\\Models\\\\Price\\:\\:\\$fillable is not covariant with PHPDoc type array\\<string\\> of overridden property Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:\\$fillable\\.$#"
+			count: 1
+			path: app/Domain/Api/Models/Price.php
+
+		-
+			message: "#^PHPDoc type array of property App\\\\Domain\\\\Api\\\\Models\\\\Product\\:\\:\\$fillable is not covariant with PHPDoc type array\\<string\\> of overridden property Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:\\$fillable\\.$#"
+			count: 1
+			path: app/Domain/Api/Models/Product.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Domain\\\\Api\\\\Resources\\\\PriceResource\\:\\:\\$currency\\.$#"
+			count: 1
+			path: app/Domain/Api/Resources/PriceResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Domain\\\\Api\\\\Resources\\\\PriceResource\\:\\:\\$discount_percentage\\.$#"
+			count: 1
+			path: app/Domain/Api/Resources/PriceResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Domain\\\\Api\\\\Resources\\\\PriceResource\\:\\:\\$final\\.$#"
+			count: 1
+			path: app/Domain/Api/Resources/PriceResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Domain\\\\Api\\\\Resources\\\\PriceResource\\:\\:\\$original\\.$#"
+			count: 1
+			path: app/Domain/Api/Resources/PriceResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Domain\\\\Api\\\\Resources\\\\ProductResource\\:\\:\\$category\\.$#"
+			count: 1
+			path: app/Domain/Api/Resources/ProductResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Domain\\\\Api\\\\Resources\\\\ProductResource\\:\\:\\$name\\.$#"
+			count: 1
+			path: app/Domain/Api/Resources/ProductResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Domain\\\\Api\\\\Resources\\\\ProductResource\\:\\:\\$price\\.$#"
+			count: 1
+			path: app/Domain/Api/Resources/ProductResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Domain\\\\Api\\\\Resources\\\\ProductResource\\:\\:\\$sku\\.$#"
+			count: 1
+			path: app/Domain/Api/Resources/ProductResource.php
+
+		-
+			message: "#^Call to an undefined method App\\\\Domain\\\\Api\\\\Repositories\\\\Contracts\\\\ProductRepository\\:\\:get\\(\\)\\.$#"
+			count: 1
+			path: app/Domain/Api/Services/ProductService.php

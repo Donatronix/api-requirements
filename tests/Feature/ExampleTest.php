@@ -7,7 +7,7 @@ use App\Domain\Api\Models\Product;
 use Illuminate\Http\Response;
 use Tests\TestCase;
 
-class ProductsControllerTests extends TestCase
+class ExampleTest extends TestCase
 {
     /**
      * Test that index returns data.
@@ -16,7 +16,7 @@ class ProductsControllerTests extends TestCase
      */
     public function test_index_returns_data(): void
     {
-        $response = $this->get('/api/products');
+        $response = $this->get('api/products');
         $response->assertStatus(Response::HTTP_OK);
         $response->assertJsonStructure([
             'data' => [
@@ -93,7 +93,7 @@ class ProductsControllerTests extends TestCase
         $product = Product::create(
             [
                 "sku" => "000008",
-                "name" => "Convertible X2, Electric",
+                "name" => "Hyundai Convertible X2, Electric",
                 "category" => "vehicle",
             ]
         );
@@ -198,7 +198,10 @@ class ProductsControllerTests extends TestCase
             );
     }
 
-    public function test_show_for_missing_product()
+    /**
+     * @return void
+     */
+    public function test_show_for_missing_product(): void
     {
 
         $this->json('get', "api/products/0")
@@ -210,6 +213,9 @@ class ProductsControllerTests extends TestCase
 
     }
 
+    /**
+     * @return void
+     */
     public function test_store_with_missing_data(): void
     {
 

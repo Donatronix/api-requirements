@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Domain\Api\Models\Product;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -42,8 +43,10 @@ class PriceSeeder extends Seeder
         $products = Product::all()->pluck('id')->toArray();
         foreach ($this->prices as $key => $price) {
             $val = array_merge($price, [
-                'id' => (string) Str::orderedUuid(),
+                'id' => (string)Str::orderedUuid(),
                 'product_id' => $products[$key],
+                "created_at" => Carbon::now(),
+                "updated_at" => Carbon::now(),
             ]);
             DB::table('prices')->insert($val);
 

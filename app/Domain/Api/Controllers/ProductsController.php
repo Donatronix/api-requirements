@@ -2,13 +2,14 @@
 
 namespace App\Domain\Api\Controllers;
 
-use App\Domain\Api\Requests\ProductCreateRequest;
-use App\Domain\Api\Requests\ProductUpdateRequest;
 use App\Domain\Api\Resources\ProductResource;
 use App\Domain\Api\Services\Interfaces\ProductServiceInterface;
 use App\Http\Requests;
 use App\Infrastructure\Laravel\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Prettus\Repository\Criteria\RequestCriteria;
 use Throwable;
 
 /**
@@ -30,7 +31,7 @@ class ProductsController extends Controller
     public function index(ProductServiceInterface $service): JsonResponse
     {
         try {
-            $service->getRepository()->pushCriteria(app('Prettus\Repository\Criteria\RequestCriteria'));
+            $service->getRepository()->pushCriteria(app(RequestCriteria::class));
             $products = $service->getRepository()->all();
 
             return response()->json([
@@ -50,24 +51,39 @@ class ProductsController extends Controller
      * Store a newly created resource in storage.
      *
      * @param ProductServiceInterface $service
-     * @param ProductCreateRequest    $request
+     * @param Request                 $request
      *
      * @return JsonResponse
      *
      */
-    public function store(ProductServiceInterface $service, ProductCreateRequest $request): JsonResponse
+    public function store(ProductServiceInterface $service, Request $request): JsonResponse
     {
         try {
 
-            $product = $service->store($request->all());
+            $validator = Validator::make($request->all(), [
+                'sku' => 'required|string|unique:products',
+                'name' => 'required|string|unique:products',
+                'category' => 'required|string',
+                'original' => 'required|numeric',
+                'final' => 'required|numeric',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $validator->errors(),
+                ], 400);
+            }
+
+            $product = $service->store($validator->validated());
 
             $response = [
                 'status' => 'success',
                 'message' => 'Product created.',
-                'data' => $product->toArray(),
+                'data' => new ProductResource($product),
             ];
 
-            return response()->json($response,201);
+            return response()->json($response, 201);
 
         } catch (Throwable $e) {
             return response()->json([
@@ -82,14 +98,14 @@ class ProductsController extends Controller
      * Display the specified resource.
      *
      * @param ProductServiceInterface $service
-     * @param string                  $id
+     * @param string                  $product
      *
      * @return JsonResponse
      */
-    public function show(ProductServiceInterface $service, string $id): JsonResponse
+    public function show(ProductServiceInterface $service, string $product): JsonResponse
     {
         try {
-            $product = $service->getRepository()->find($id);
+            $product = $service->getRepository()->find($product);
 
             return response()->json([
                 'status' => 'success',
@@ -110,17 +126,32 @@ class ProductsController extends Controller
      * Update the specified resource in storage.
      *
      * @param ProductServiceInterface $service
-     * @param ProductUpdateRequest    $request
-     * @param string                  $id
+     * @param Request                 $request
+     * @param string                  $product
      *
      * @return JsonResponse
      *
      */
-    public function update(ProductServiceInterface $service, ProductUpdateRequest $request, string $id): JsonResponse
+    public function update(ProductServiceInterface $service, Request $request, string $product): JsonResponse
     {
         try {
 
-            $product = $service->update($request->all(), $id);
+            $validator = Validator::make($request->all(), [
+                'sku' => 'required|string',
+                'name' => 'required|string',
+                'category' => 'required|string',
+                'original' => 'required|numeric',
+                'final' => 'required|numeric',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $validator->errors(),
+                ], 400);
+            }
+
+            $product = $service->update($validator->validated(), $product);
 
             $response = [
                 'status' => 'success',
@@ -131,7 +162,6 @@ class ProductsController extends Controller
             return response()->json($response);
 
         } catch (Throwable $e) {
-
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage(),
@@ -144,14 +174,14 @@ class ProductsController extends Controller
      * Remove the specified resource from storage.
      *
      * @param ProductServiceInterface $service
-     * @param string                  $id
+     * @param string                  $product
      *
      * @return JsonResponse
      */
-    public function destroy(ProductServiceInterface $service,string $id): JsonResponse
+    public function destroy(ProductServiceInterface $service, string $product): JsonResponse
     {
         try {
-            $deleted = $service->delete($id);
+            $deleted = $service->delete($product);
 
             return response()->json([
                 'status' => 'success',
