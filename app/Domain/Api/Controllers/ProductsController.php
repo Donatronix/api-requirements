@@ -6,6 +6,7 @@ use App\Domain\Api\Resources\ProductResource;
 use App\Domain\Api\Services\Interfaces\ProductServiceInterface;
 use App\Http\Requests;
 use App\Infrastructure\Laravel\Controller;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -89,8 +90,7 @@ class ProductsController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage(),
-            ]);
-
+            ], 500);
         }
     }
 
@@ -112,11 +112,17 @@ class ProductsController extends Controller
                 'message' => 'Product retrieved successfully.',
                 'data' => new ProductResource($product),
             ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 404);
+
         } catch (Throwable $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage(),
-            ]);
+            ], 500);
 
         }
     }
@@ -151,7 +157,8 @@ class ProductsController extends Controller
                 ], 400);
             }
 
-            $product = $service->update($validator->validated(), $product);
+
+            $product = $service->update($validator->validated(), $service->getRepository()->find($product)->id);
 
             $response = [
                 'status' => 'success',
@@ -160,6 +167,12 @@ class ProductsController extends Controller
             ];
 
             return response()->json($response);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 404);
 
         } catch (Throwable $e) {
             return response()->json([
@@ -181,13 +194,19 @@ class ProductsController extends Controller
     public function destroy(ProductServiceInterface $service, string $product): JsonResponse
     {
         try {
-            $deleted = $service->delete($product);
+            $deleted = $service->delete($service->getRepository()->find($product)->id);
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Product deleted.',
                 'deleted' => $deleted,
             ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 404);
+
         } catch (Throwable $e) {
 
             return response()->json([

@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Domain\Api\Models\Price;
 use App\Domain\Api\Models\Product;
+use Carbon\Carbon;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
@@ -90,20 +92,19 @@ class ExampleTest extends TestCase
      */
     public function test_product_is_shown_correctly(): void
     {
-        $product = Product::create(
-            [
-                "sku" => "000008",
-                "name" => "Hyundai Convertible X2, Electric",
-                "category" => "vehicle",
-            ]
-        );
-        Price::create(
-            [
-                "original" => 350000,
-                "final" => 250000,
-                'product_id' => $product->id,
-            ]
-        );
+        $product = Product::create([
+            "sku" => "000008",
+            "name" => "Hyundai Convertible X2, Electric",
+            "category" => "vehicle",
+        ]);
+        DB::table('prices')->insert([
+            "original" => 350000,
+            "final" => 250000,
+            'product_id' => $product->id,
+            'id' => (string)Str::orderedUuid(),
+            "created_at" => Carbon::now(),
+            "updated_at" => Carbon::now(),
+        ]);
 
         $this->json('get', "api/products/$product->id")
             ->assertStatus(Response::HTTP_OK)
@@ -137,20 +138,19 @@ class ExampleTest extends TestCase
     public function test_product_is_destroyed(): void
     {
 
-        $product = Product::create(
-            [
-                "sku" => "000018",
-                "name" => "Nissan X2, Electric",
-                "category" => "vehicle",
-            ]
-        );
-        Price::create(
-            [
-                "original" => 350000,
-                "final" => 250000,
-                'product_id' => $product->id,
-            ]
-        );
+        $product = Product::create([
+            "sku" => "000032",
+            "name" => "Nissan X2, Electric",
+            "category" => "vehicle",
+        ]);
+        DB::table('prices')->insert([
+            "original" => 350000,
+            "final" => 250000,
+            'product_id' => $product->id,
+            'id' => (string)Str::orderedUuid(),
+            "created_at" => Carbon::now(),
+            "updated_at" => Carbon::now(),
+        ]);
 
         $this->json('delete', "api/products/$product->id")
             ->assertNoContent();
@@ -165,14 +165,17 @@ class ExampleTest extends TestCase
     public function test_update_product_returns_correct_data(): void
     {
         $product = Product::create([
-            "sku" => "000019",
-            "name" => "BMW Convertible X2, Electric",
+            "sku" => "000040",
+            "name" => "J5 Convertible X2, Electric",
             "category" => "vehicle",
         ]);
-        Price::create([
+        DB::table('prices')->insert([
             "original" => 400000,
             "final" => 250000,
             'product_id' => $product->id,
+            'id' => (string)Str::orderedUuid(),
+            "created_at" => Carbon::now(),
+            "updated_at" => Carbon::now(),
         ]);
 
         $payload = [
@@ -227,6 +230,6 @@ class ExampleTest extends TestCase
         ];
         $this->json('post', 'api/products', $payload)
             ->assertStatus(Response::HTTP_BAD_REQUEST)
-            ->assertJsonStructure(['error']);
+            ->assertJsonStructure(['status']);
     }
 }
