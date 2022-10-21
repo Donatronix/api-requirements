@@ -5,6 +5,7 @@ parameters:
 
     paths:
         - app/Domain/Api
+        - database\Seeders
 
     # Level 9 is the highest level
     level: 5

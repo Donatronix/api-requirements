@@ -21,7 +21,7 @@ class CreatePricesTable extends Migration
             $table->uuid('product_id');
             $table->unsignedBigInteger('original');
             $table->unsignedBigInteger('final');
-            $table->unsignedBigInteger('discount_percentage')->nullable();
+            $table->string('discount_percentage')->nullable();
             $table->string('currency')->default('EUR');
             $table->timestamps();
         });

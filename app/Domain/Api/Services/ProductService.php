@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Domain\Api\Services;
 
 
+use App\Domain\Api\Models\Price;
+use App\Domain\Api\Models\Product;
 use App\Domain\Api\Repositories\Contracts\PriceRepository;
 use App\Domain\Api\Repositories\Contracts\ProductRepository;
 use App\Domain\Api\Services\Interfaces\ProductServiceInterface;
 use App\Domain\Api\Validators\ProductValidator;
 use App\Domain\Shared\Services\BaseService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
 
@@ -102,7 +103,12 @@ class ProductService extends BaseService implements ProductServiceInterface
     {
         try {
             DB::beginTransaction();
-            $product = parent::store($request);
+
+            $product = Product::create([
+                'sku' => $request['sku'],
+                'name' => $request['name'],
+                'category' => $request['category'],
+            ]);
 
             if (strtolower($request['category']) === 'insurance') {
                 $discount_percentage = '30%';
@@ -121,8 +127,7 @@ class ProductService extends BaseService implements ProductServiceInterface
                 $final = $request['original'] - ($request['original'] * 0.15);
             }
 
-            $this->prices->create([
-                'id' => (string)Str::orderedUuid(),
+            Price::create([
                 'product_id' => $product->id,
                 'original' => $request['original'],
                 'final' => $final ?? $request['final'],
@@ -156,7 +161,7 @@ class ProductService extends BaseService implements ProductServiceInterface
                 throw new RuntimeException('Name already exists for another product');
             }
 
-            $product = parent::update([
+            Product::query()->update([
                 'sku' => $request['sku'],
                 'name' => $request['name'],
                 'category' => $request['category'],
@@ -178,21 +183,13 @@ class ProductService extends BaseService implements ProductServiceInterface
                 $discount_percentage = '15%';
                 $final = $request['original'] - ($request['original'] * 0.15);
             }
-            if ($product->price !== null) {
-                $product->price->first()->update([
-                    'original' => $request['original'],
-                    'final' => $final ?? $request['final'],
-                    'discount_percentage' => $discount_percentage ?? null,
-                ]);
-            } else {
-                $this->prices->create([
-                    'id' => (string)Str::orderedUuid(),
-                    'product_id' => $product->id,
-                    'original' => $request['original'],
-                    'final' => $final ?? $request['final'],
-                    'discount_percentage' => $discount_percentage ?? null,
-                ]);
-            }
+
+            $product->price()->update([
+                'original' => $request['original'],
+                'final' => $final ?? $request['final'],
+                'discount_percentage' => $discount_percentage ?? null,
+            ]);
+
             DB::commit();
 
             return $this->repository->find($id);
