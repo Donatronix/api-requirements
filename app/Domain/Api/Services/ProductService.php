@@ -10,8 +10,6 @@ use App\Domain\Api\Repositories\Contracts\ProductRepository;
 use App\Domain\Api\Services\Interfaces\ProductServiceInterface;
 use App\Domain\Api\Validators\ProductValidator;
 use App\Domain\Shared\Services\BaseService;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -70,9 +68,26 @@ class ProductService extends BaseService implements ProductServiceInterface
     }
 
     /**
+     * Get products by price
+     *
+     * @param $price
+     *
+     * @return mixed
+     */
+    public function getProductsByPrice($price): mixed
+    {
+        return $this->repository->scopeQuery(function ($query) use ($price) {
+            return $query->whereHas('prices', function ($q) use ($price) {
+                return $q->where('final', $price)
+                    ->orWhere('original', $price);
+            });
+        })->all();
+    }
+
+    /**
      * Get products with discount
      *
-     * @return LengthAwarePaginator|Collection|mixed
+     * @return mixed
      */
     public function getProductsWithOutDiscount(): mixed
     {
@@ -89,12 +104,29 @@ class ProductService extends BaseService implements ProductServiceInterface
             DB::beginTransaction();
             $product = parent::store($request);
 
+            if (strtolower($request['category']) === 'insurance') {
+                $discount_percentage = '30%';
+                $final = $request['original'] - ($request['original'] * 0.3);
+            }
+
+            if (!isset($discount_percentage)) {
+                $discount_percentage = ($request['original'] - $request['final']) * 100 / $request['original'];
+                if ($discount_percentage <= 0) {
+                    $discount_percentage = null;
+                }
+            }
+
+            if ($request['sku'] === '000003') {
+                $discount_percentage = '15%';
+                $final = $request['original'] - ($request['original'] * 0.15);
+            }
+
             $this->prices->create([
                 'id' => (string)Str::orderedUuid(),
                 'product_id' => $product->id,
                 'original' => $request['original'],
-                'final' => $request['final'],
-                'discount_percentage' => $request['discount_percentage'],
+                'final' => $final ?? $request['final'],
+                'discount_percentage' => $discount_percentage ?? null,
             ]);
 
             DB::commit();

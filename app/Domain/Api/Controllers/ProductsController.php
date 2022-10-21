@@ -33,11 +33,13 @@ class ProductsController extends Controller
     {
         try {
 
+            $service->getRepository()->pushCriteria(app(RequestCriteria::class));
+
             if (request('category')) {
-                $service->getRepository()->pushCriteria(app(RequestCriteria::class));
                 $products = $service->getProductsByCategory(request('category'));
+            } elseif (request('price')) {
+                $products = $service->getProductsByPrice(request('price'));
             } else {
-                $service->getRepository()->pushCriteria(app(RequestCriteria::class));
                 $products = $service->getRepository()->all();
             }
 
