@@ -156,7 +156,11 @@ class ProductService extends BaseService implements ProductServiceInterface
                 throw new RuntimeException('Name already exists for another product');
             }
 
-            $product = parent::update($request, $id);
+            $product = parent::update([
+                'sku' => $request['sku'],
+                'name' => $request['name'],
+                'category' => $request['category'],
+            ], $id);
 
             if (strtolower($request['category']) === 'insurance') {
                 $discount_percentage = '30%';
@@ -174,13 +178,21 @@ class ProductService extends BaseService implements ProductServiceInterface
                 $discount_percentage = '15%';
                 $final = $request['original'] - ($request['original'] * 0.15);
             }
-
-            $this->prices->update([
-                'original' => $request['original'],
-                'final' => $final ?? $request['final'],
-                'discount_percentage' => $discount_percentage,
-            ], $product->price->id);
-
+            if ($product->price !== null) {
+                $product->price->first()->update([
+                    'original' => $request['original'],
+                    'final' => $final ?? $request['final'],
+                    'discount_percentage' => $discount_percentage ?? null,
+                ]);
+            } else {
+                $this->prices->create([
+                    'id' => (string)Str::orderedUuid(),
+                    'product_id' => $product->id,
+                    'original' => $request['original'],
+                    'final' => $final ?? $request['final'],
+                    'discount_percentage' => $discount_percentage ?? null,
+                ]);
+            }
             DB::commit();
 
             return $this->repository->find($id);
@@ -189,10 +201,6 @@ class ProductService extends BaseService implements ProductServiceInterface
             throw new RuntimeException($e->getMessage());
         }
 
-    }
-
-    protected function checkForInsuranceCategory()
-    {
     }
 
     /**

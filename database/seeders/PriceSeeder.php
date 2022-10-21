@@ -45,14 +45,15 @@ class PriceSeeder extends Seeder
      */
     public function run()
     {
-        $products = Product::all()->toArray();
+        $products = Product::all()->map(function ($product) {
+            return $product->toArray();
+        });
         foreach ($this->prices as $key => $price) {
+
             $this->products->update(array_merge($products[$key], array_merge($price, [
                 'id' => (string)Str::orderedUuid(),
-                'product_id' => $products[$key],
-            ])), [
-                $products[$key]['id'],
-            ]);
+                'product_id' => $products[$key]['id'],
+            ])), $products[$key]['id']);
 
         }
     }

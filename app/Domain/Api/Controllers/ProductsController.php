@@ -64,11 +64,11 @@ class ProductsController extends Controller
      *
      * @return JsonResponse
      */
-    public function getProductsWithDiscount(ProductServiceInterface $service,): JsonResponse
+    public function getProductsWithOutDiscount(ProductServiceInterface $service,): JsonResponse
     {
         try {
             $service->getRepository()->pushCriteria(app(RequestCriteria::class));
-            $products = $service->getProductsWithDiscount();
+            $products = $service->getProductsWithOutDiscount();
 
             return response()->json([
                 'status' => 'success',
