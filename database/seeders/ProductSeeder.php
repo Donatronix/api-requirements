@@ -61,7 +61,5 @@ class ProductSeeder extends Seeder
         array_map(function ($product) {
             $this->services->store($product);
         }, $this->products);
-
-
     }
 }

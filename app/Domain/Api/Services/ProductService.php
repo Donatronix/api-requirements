@@ -65,7 +65,7 @@ class ProductService extends BaseService implements ProductServiceInterface
     {
         return $this->repository->findWhere([
             ['category', 'like', '%' . $category . '%'],
-        ])->all();
+        ]);
     }
 
     /**

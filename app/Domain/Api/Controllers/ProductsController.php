@@ -4,7 +4,6 @@ namespace App\Domain\Api\Controllers;
 
 use App\Domain\Api\Resources\ProductResource;
 use App\Domain\Api\Services\Interfaces\ProductServiceInterface;
-use App\Http\Requests;
 use App\Infrastructure\Laravel\Controller;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -26,19 +25,20 @@ class ProductsController extends Controller
      * Display a listing of the resource.
      *
      * @param ProductServiceInterface $service
+     * @param Request                 $request
      *
      * @return JsonResponse
      */
-    public function index(ProductServiceInterface $service): JsonResponse
+    public function index(ProductServiceInterface $service, Request $request): JsonResponse
     {
         try {
 
             $service->getRepository()->pushCriteria(app(RequestCriteria::class));
 
-            if (request('category')) {
-                $products = $service->getProductsByCategory(request('category'));
-            } elseif (request('price')) {
-                $products = $service->getProductsByPrice(request('price'));
+            if ($request->query->get('category')) {
+                $products = $service->getProductsByCategory($request->query->get('category'));
+            } elseif ($request->query->get('price')) {
+                $products = $service->getProductsByPrice($request->query->get('price'));
             } else {
                 $products = $service->getRepository()->all();
             }
