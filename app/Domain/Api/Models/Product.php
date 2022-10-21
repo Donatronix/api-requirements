@@ -33,7 +33,7 @@ class Product extends Model
      */
     public function price(): HasOne
     {
-        return $this->hasOne(Price::class);
+        return $this->hasOne(Price::class, 'product_id');
     }
 
 }

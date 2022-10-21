@@ -158,11 +158,28 @@ class ProductService extends BaseService implements ProductServiceInterface
 
             $product = parent::update($request, $id);
 
+            if (strtolower($request['category']) === 'insurance') {
+                $discount_percentage = '30%';
+                $final = $request['original'] - ($request['original'] * 0.3);
+            }
+
+            if (!isset($discount_percentage)) {
+                $discount_percentage = ($request['original'] - $request['final']) * 100 / $request['original'];
+                if ($discount_percentage <= 0) {
+                    $discount_percentage = null;
+                }
+            }
+
+            if ($request['sku'] === '000003') {
+                $discount_percentage = '15%';
+                $final = $request['original'] - ($request['original'] * 0.15);
+            }
+
             $this->prices->update([
                 'original' => $request['original'],
-                'final' => $request['final'],
-                'discount_percentage' => ($request['original'] - $request['final']) * 100 / $request['original'],
-            ], $product->prices->first()->id);
+                'final' => $final ?? $request['final'],
+                'discount_percentage' => $discount_percentage,
+            ], $product->price->id);
 
             DB::commit();
 
@@ -172,6 +189,10 @@ class ProductService extends BaseService implements ProductServiceInterface
             throw new RuntimeException($e->getMessage());
         }
 
+    }
+
+    protected function checkForInsuranceCategory()
+    {
     }
 
     /**

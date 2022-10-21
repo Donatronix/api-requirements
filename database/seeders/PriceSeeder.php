@@ -3,13 +3,17 @@
 namespace Database\Seeders;
 
 use App\Domain\Api\Models\Product;
-use Carbon\Carbon;
+use App\Domain\Api\Services\Interfaces\ProductServiceInterface;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Throwable;
 
 class PriceSeeder extends Seeder
 {
+    public function __construct(protected ProductServiceInterface $products)
+    {
+    }
+
     protected array $prices = [
         [
             "original" => 89000,
@@ -37,18 +41,18 @@ class PriceSeeder extends Seeder
      * Run the database seeds.
      *
      * @return void
+     * @throws Throwable
      */
     public function run()
     {
-        $products = Product::all()->pluck('id')->toArray();
+        $products = Product::all()->toArray();
         foreach ($this->prices as $key => $price) {
-            $val = array_merge($price, [
+            $this->products->update(array_merge($products[$key], array_merge($price, [
                 'id' => (string)Str::orderedUuid(),
                 'product_id' => $products[$key],
-                "created_at" => Carbon::now(),
-                "updated_at" => Carbon::now(),
+            ])), [
+                $products[$key]['id'],
             ]);
-            DB::table('prices')->insert($val);
 
         }
     }
