@@ -20,5 +20,5 @@ interface ProductServiceInterface extends BaseServiceInterface
      */
     public function getProductsByCategory(string $category): mixed;
 
-    public function getProductsWithDiscount();
+    public function getProductsWithOutDiscount();
 }

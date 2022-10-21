@@ -66,7 +66,7 @@ class ProductService extends BaseService implements ProductServiceInterface
     {
         return $this->repository->findWhere([
             ['category', 'like', '%' . $category . '%'],
-        ])->get();
+        ])->all();
     }
 
     /**
@@ -74,7 +74,7 @@ class ProductService extends BaseService implements ProductServiceInterface
      *
      * @return LengthAwarePaginator|Collection|mixed
      */
-    public function getProductsWithDiscount(): mixed
+    public function getProductsWithOutDiscount(): mixed
     {
         return $this->repository->scopeQuery(function ($query) {
             return $query->whereHas('prices', function ($q) {

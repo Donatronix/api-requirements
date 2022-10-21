@@ -32,8 +32,41 @@ class ProductsController extends Controller
     public function index(ProductServiceInterface $service): JsonResponse
     {
         try {
+
+            if (request('category')) {
+                $service->getRepository()->pushCriteria(app(RequestCriteria::class));
+                $products = $service->getProductsByCategory(request('category'));
+            } else {
+                $service->getRepository()->pushCriteria(app(RequestCriteria::class));
+                $products = $service->getRepository()->all();
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Products retrieved successfully',
+                'data' => ProductResource::collection($products),
+            ]);
+        } catch (Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    /**
+     * Get products with discounts.
+     *
+     * @param ProductServiceInterface $service
+     *
+     * @return JsonResponse
+     */
+    public function getProductsWithDiscount(ProductServiceInterface $service,): JsonResponse
+    {
+        try {
             $service->getRepository()->pushCriteria(app(RequestCriteria::class));
-            $products = $service->getRepository()->all();
+            $products = $service->getProductsWithDiscount();
 
             return response()->json([
                 'status' => 'success',
